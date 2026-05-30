@@ -3,24 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quiz Runner</title>
+<title>Quiz Game</title>
 
 <style>
 
 body{
     margin:0;
-    background:#1f1f2e;
+    background:#1e1e2f;
     color:white;
-    font-family:Arial, sans-serif;
+    font-family:Arial,sans-serif;
     overflow:hidden;
 }
 
-#score{
-    position:absolute;
-    top:15px;
-    left:20px;
-    font-size:28px;
+#topBar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 30px;
+    font-size:32px;
     font-weight:bold;
+}
+
+#lives{
+    color:#ff4d4d;
+}
+
+#timer{
+    color:#ffd700;
 }
 
 #questionBox{
@@ -33,14 +42,14 @@ body{
 }
 
 #question{
-    font-size:42px;
+    font-size:48px;
     font-weight:bold;
 }
 
 .answer{
     position:absolute;
-    top:90px;
-    padding:15px 30px;
+    top:100px;
+    padding:15px 35px;
     background:#4CAF50;
     border-radius:12px;
     font-size:36px;
@@ -55,7 +64,7 @@ body{
     transform:scale(1.1);
 }
 
-#result{
+#endScreen{
     display:none;
     position:absolute;
     top:50%;
@@ -64,18 +73,17 @@ body{
     text-align:center;
 }
 
-#result h1{
-    font-size:60px;
-}
-
-#result h2{
-    font-size:40px;
+#endTitle{
+    font-size:90px;
+    margin-bottom:20px;
 }
 
 button{
     padding:15px 30px;
     font-size:24px;
     cursor:pointer;
+    border:none;
+    border-radius:10px;
 }
 
 </style>
@@ -83,15 +91,17 @@ button{
 
 <body>
 
-<div id="score">Điểm: 0</div>
+<div id="topBar">
+    <div id="lives">❤️❤️❤️</div>
+    <div id="timer">04:00</div>
+</div>
 
 <div id="questionBox">
     <div id="question"></div>
 </div>
 
-<div id="result">
-    <h1>Hoàn thành!</h1>
-    <h2 id="finalScore"></h2>
+<div id="endScreen">
+    <h1 id="endTitle"></h1>
     <button onclick="location.reload()">Chơi lại</button>
 </div>
 
@@ -100,9 +110,9 @@ button{
 const questions = [
 
 {
-    question:"2 + 4 bằng mấy?",
-    answers:["2","12","6","8"],
-    correct:"6"
+    question:"2 + 2 bằng mấy?",
+    answers:["1","2","3","4"],
+    correct:"4"
 },
 
 {
@@ -120,30 +130,72 @@ const questions = [
 ];
 
 let currentQuestion = 0;
-let score = 0;
+let lives = 3;
+
+let timeLeft = 240;
+
+const timer = setInterval(()=>{
+
+    timeLeft--;
+
+    let minutes = Math.floor(timeLeft/60);
+    let seconds = timeLeft%60;
+
+    document.getElementById("timer").textContent =
+        String(minutes).padStart(2,"0")
+        + ":"
+        +
+        String(seconds).padStart(2,"0");
+
+    if(timeLeft <= 0){
+
+        clearInterval(timer);
+
+        gameOver();
+
+    }
+
+},1000);
+
+function updateLives(){
+
+    let hearts = "";
+
+    for(let i=0;i<lives;i++){
+        hearts += "❤️";
+    }
+
+    document.getElementById("lives").textContent = hearts;
+
+}
 
 function loadQuestion(){
 
     document.querySelectorAll(".answer").forEach(e=>e.remove());
 
     if(currentQuestion >= questions.length){
-        endGame();
+
+        youWin();
+
         return;
     }
 
     const q = questions[currentQuestion];
 
-    document.getElementById("question").textContent = q.question;
+    document.getElementById("question").textContent =
+        q.question;
 
     q.answers.forEach((answerText,index)=>{
 
-        const answer = document.createElement("div");
+        const answer =
+            document.createElement("div");
 
         answer.className = "answer";
+
         answer.textContent = answerText;
 
         answer.style.left =
-            (window.innerWidth + index * 300) + "px";
+            (window.innerWidth + index*300) + "px";
 
         document.body.appendChild(answer);
 
@@ -159,8 +211,10 @@ function loadQuestion(){
             answer.style.left = left + "px";
 
             if(left < -250){
+
                 answer.style.left =
                     window.innerWidth + "px";
+
             }
 
         },16);
@@ -171,11 +225,34 @@ function loadQuestion(){
 
             if(answerText === q.correct){
 
-                score++;
+                document.body.style.background =
+                "#1f5e2d";
 
-                document.getElementById("score")
-                .textContent =
-                "Điểm: " + score;
+                setTimeout(()=>{
+                    document.body.style.background =
+                    "#1e1e2f";
+                },200);
+
+            }else{
+
+                lives--;
+
+                updateLives();
+
+                document.body.style.background =
+                "#7a1e1e";
+
+                setTimeout(()=>{
+                    document.body.style.background =
+                    "#1e1e2f";
+                },200);
+
+                if(lives <= 0){
+
+                    gameOver();
+
+                    return;
+                }
 
             }
 
@@ -193,21 +270,41 @@ function loadQuestion(){
 
 }
 
-function endGame(){
+function gameOver(){
+
+    clearInterval(timer);
 
     document.getElementById("questionBox")
     .style.display = "none";
 
-    document.getElementById("result")
+    document
+    .querySelectorAll(".answer")
+    .forEach(e=>e.remove());
+
+    document.getElementById("endScreen")
     .style.display = "block";
 
-    document.getElementById("finalScore")
-    .textContent =
-    "Bạn đạt " +
-    score +
-    "/" +
-    questions.length +
-    " điểm";
+    document.getElementById("endTitle")
+    .innerHTML = "💀 GAME OVER";
+
+}
+
+function youWin(){
+
+    clearInterval(timer);
+
+    document.getElementById("questionBox")
+    .style.display = "none";
+
+    document
+    .querySelectorAll(".answer")
+    .forEach(e=>e.remove());
+
+    document.getElementById("endScreen")
+    .style.display = "block";
+
+    document.getElementById("endTitle")
+    .innerHTML = "🏆 YOU WIN";
 
 }
 
