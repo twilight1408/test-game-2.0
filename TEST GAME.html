@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Runner</title>
+
+<style>
+
+body{
+    margin:0;
+    background:#1f1f2e;
+    color:white;
+    font-family:Arial, sans-serif;
+    overflow:hidden;
+}
+
+#score{
+    position:absolute;
+    top:15px;
+    left:20px;
+    font-size:28px;
+    font-weight:bold;
+}
+
+#questionBox{
+    position:absolute;
+    top:55%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+    width:80%;
+}
+
+#question{
+    font-size:42px;
+    font-weight:bold;
+}
+
+.answer{
+    position:absolute;
+    top:90px;
+    padding:15px 30px;
+    background:#4CAF50;
+    border-radius:12px;
+    font-size:36px;
+    font-weight:bold;
+    cursor:pointer;
+    user-select:none;
+    white-space:nowrap;
+    transition:0.2s;
+}
+
+.answer:hover{
+    transform:scale(1.1);
+}
+
+#result{
+    display:none;
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+}
+
+#result h1{
+    font-size:60px;
+}
+
+#result h2{
+    font-size:40px;
+}
+
+button{
+    padding:15px 30px;
+    font-size:24px;
+    cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="score">Điểm: 0</div>
+
+<div id="questionBox">
+    <div id="question"></div>
+</div>
+
+<div id="result">
+    <h1>Hoàn thành!</h1>
+    <h2 id="finalScore"></h2>
+    <button onclick="location.reload()">Chơi lại</button>
+</div>
+
+<script>
+
+const questions = [
+
+{
+    question:"2 + 2 bằng mấy?",
+    answers:["1","2","3","4"],
+    correct:"4"
+},
+
+{
+    question:"Thủ đô Việt Nam là?",
+    answers:["Huế","Đà Nẵng","Hà Nội","Cần Thơ"],
+    correct:"Hà Nội"
+},
+
+{
+    question:"Mặt trời mọc ở hướng nào?",
+    answers:["Tây","Đông","Nam","Bắc"],
+    correct:"Đông"
+}
+
+];
+
+let currentQuestion = 0;
+let score = 0;
+
+function loadQuestion(){
+
+    document.querySelectorAll(".answer").forEach(e=>e.remove());
+
+    if(currentQuestion >= questions.length){
+        endGame();
+        return;
+    }
+
+    const q = questions[currentQuestion];
+
+    document.getElementById("question").textContent = q.question;
+
+    q.answers.forEach((answerText,index)=>{
+
+        const answer = document.createElement("div");
+
+        answer.className = "answer";
+        answer.textContent = answerText;
+
+        answer.style.left =
+            (window.innerWidth + index * 300) + "px";
+
+        document.body.appendChild(answer);
+
+        let speed = 8;
+
+        const move = setInterval(()=>{
+
+            let left =
+                parseFloat(answer.style.left);
+
+            left -= speed;
+
+            answer.style.left = left + "px";
+
+            if(left < -250){
+                answer.style.left =
+                    window.innerWidth + "px";
+            }
+
+        },16);
+
+        answer.onclick = ()=>{
+
+            clearInterval(move);
+
+            if(answerText === q.correct){
+
+                score++;
+
+                document.getElementById("score")
+                .textContent =
+                "Điểm: " + score;
+
+            }
+
+            document
+            .querySelectorAll(".answer")
+            .forEach(e=>e.remove());
+
+            currentQuestion++;
+
+            setTimeout(loadQuestion,300);
+
+        };
+
+    });
+
+}
+
+function endGame(){
+
+    document.getElementById("questionBox")
+    .style.display = "none";
+
+    document.getElementById("result")
+    .style.display = "block";
+
+    document.getElementById("finalScore")
+    .textContent =
+    "Bạn đạt " +
+    score +
+    "/" +
+    questions.length +
+    " điểm";
+
+}
+
+loadQuestion();
+
+</script>
+
+</body>
+</html>
